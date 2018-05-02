@@ -5,6 +5,15 @@
   <script src='ac.js'></script>
   <link rel="stylesheet" type="text/css" href="ac.css">
   <style>
+      * {
+          font-family: "Arial Narrow", sans-serif;
+      }
+    #theFileUploader
+  {
+    position: absolute;
+    top: 20px;
+    right: 120px;
+  }
 #theInspector input[type=range]{
     width: 65%;
     display: inline-block;
@@ -64,7 +73,6 @@ body{
   {
     font-size: 15px;
   }
-
   #theList button img{
       height: 100px;
       width: 100px;
@@ -122,7 +130,6 @@ body{
       });
     }
   }
-
   function deleteClicked(n){
     var id = currRSSFeedList[n].id;
     var x = confirm("Delete Image?");
@@ -133,10 +140,60 @@ body{
       });
     }
   }
-
-
-
-
+var fileUploaded = function()
+{
+   var file = $('#theFileUploader').get(0);
+   var fileObj = $('#theFileUploader').get(0).files[0]
+   var filename = fileObj.name;
+   var ext = filename.split(".");
+   ext = ext[ext.length-1];
+   console.log(ext);
+   var fd = new FormData();
+   var fileInput = "s3Upload_" + new Date().getTime().toString() + "." + ext;
+   fd.append('fileInput', fileInput);
+   fd.append('input', file.files[0]);
+   fd.append('date', (new Date()).toString());
+    //fd.append('data', data);
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function(e) {  
+      if (xhr.readyState != 4) { return; }
+        // callback logic
+       document.getElementById("preview").src = "https://s3-us-west-1.amazonaws.com/ame470jl/" + fileInput;
+    };
+    xhr.open("POST", "/uploadFile", true);
+    xhr.send(fd);
+}
+function saveImageEdit(){
+  if(sessionStorage.getItem("isEdited") == "true"){
+     var fd = new FormData();
+     var fileInput = document.getElementById("preview").src.split("ame470s2017tg/")[1];
+     fileInput = fileInput.split("?")[0];
+     fd.append('fileInput', fileInput);
+     fd.append('date', (new Date()).toString());
+     fd.append('data', sessionStorage.getItem("editedImage"));
+      //fd.append('data', data);
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function(e) {  
+        cancelImageEdit();
+        if (xhr.readyState != 4) { return; }
+          // callback logic
+        document.getElementById("preview").src = "https://s3-us-west-1.amazonaws.com/ame470jl/" + fileInput + "?t=" + new Date().getTime();
+      };
+      xhr.open("POST", "/uploadImage", true);
+      xhr.send(fd);
+  }
+}
+function cancelImageEdit()
+{
+  document.getElementById("DRFrame").src = "";
+  document.getElementById("editWrapper").style.display = "none";
+}
+function editImage(){
+  var url = document.getElementById("preview").src;
+  document.getElementById("DRFrame").src = "./demo/index.html#" + url;
+  document.getElementById("editWrapper").style.display = "block";
+  sessionStorage.setItem("isEdited", "false");
+}
   function getDataFromServer(){
     //var url = "./eval?eq=34-4*45";
     var url = "https://rss.itunes.apple.com/api/v1/us/apple-music/hot-tracks/all/10/explicit.json";
@@ -144,7 +201,6 @@ body{
       $("#result").val(resData);
     });
   }
-
   var currRSSData = null;
   function changeRSSSrc()
   {
@@ -152,7 +208,6 @@ body{
     var url = "./getFeedData?url=" + feedURL;
     loadRSS(url);
   }
-
   function feedSelected(n)
   {
     ac.show();
@@ -162,7 +217,6 @@ body{
     $("#theImageList .item").removeClass("active");
     $("#theImageList .item:nth-of-type(" + (n+1) + ")").addClass("active");
   }
-
   function addImgSrc()
   {
     var feedURL = prompt("Enter new image URL:");
@@ -174,24 +228,23 @@ body{
         start();
     })
   }
-
-var currSelection;
-
+  
+  //database
+  var currSelection;
   function imgSelected(n)
   {
-    currSelection = n;
+  	currSelection = n;
     var currName = currRSSFeedList[n].name;
     var id = currRSSFeedList[n].id;
     var imgURL = currRSSFeedList[n].url;
-   // resetFilters();
-    setFilters(n)
+//     resetFilters();
     // Instead of the above resetFilters(), init the filters stored by user and apply it!
+    setFilters();
     document.getElementById("theDetails").style.backgroundImage = "url(" + imgURL + ")";
    
     $("#theImageList .item").removeClass("active");
     $("#theImageList .item:nth-of-type(" + (n+1) + ")").addClass("active");
   }
-
   function start()
   {
     ac.show();
@@ -213,12 +266,10 @@ var currSelection;
               markup += "</div>";
           }
           $("#theImageList").html(markup);
-          imgSelected(0);
         }     
         ac.hide();
     });
   }
-
   function loadRSS(url){
     console.log(url);
     loadFile(url, function(resData){
@@ -246,15 +297,12 @@ var currSelection;
     var name = data.name || "";
     var link = data.url || "";
     console.log(data);
-
     markup += "<img src='" + thumbnail + "'>";
     markup += "<a target='_blank' href='" + link + "'><h1>" + name + "</h1></a>";
-
-
     $("#theDetails").html(markup);
     //document.getElementById("theDetails").innerHTML = markup;
   }
-
+  
   function setFilters()
   {
     var n = currSelection;
@@ -270,7 +318,6 @@ var currSelection;
       document.getElementById("sepia").value = obj.sepia || "0";
       applyFilter();  
   }
-
   function resetFilters()
   {
       document.getElementById("blur").value = "0";
@@ -284,10 +331,9 @@ var currSelection;
       document.getElementById("sepia").value = "0";
       applyFilter();
 }
-
   function applyFilter()
   {
-    var n = currSelection;
+  var n = currSelection;
       var blur = document.getElementById("blur").value + "px";
       var brightness = document.getElementById("brightness").value + "%";
       var contrast = document.getElementById("contrast").value + "%";
@@ -297,7 +343,6 @@ var currSelection;
       var opacity = document.getElementById("opacity").value + "%";
       var saturate = document.getElementById("saturate").value + "%";
       var sepia = document.getElementById("sepia").value + "%";
-
       var filter = " blur(" + blur + ") ";
       filter += " brightness(" + brightness + ") ";
       filter += " contrast(" + contrast + ") ";
@@ -307,9 +352,10 @@ var currSelection;
       filter += " opacity(" + opacity + ") ";
       filter += " saturate(" + saturate + ") ";
       filter += " sepia(" + sepia + ") ";
-
+      
       document.getElementById("theDetails").style.filter = filter;
     
+//     save to the database
       currRSSFeedList[n].blur = parseInt(blur);
       currRSSFeedList[n].brightness = parseInt(brightness);
       currRSSFeedList[n].contrast = parseInt(contrast);
@@ -330,7 +376,6 @@ var currSelection;
         + "&opacity=" + parseInt(opacity)
         + "&saturate=" + parseInt(saturate)
         + "&sepia=" + parseInt(sepia);
-
         loadFile(url, function(resData){
         });
   }
@@ -340,7 +385,7 @@ var currSelection;
 <body onload='start()'>
 <div id='allImagesWrapper'>
 	<h1> Image Lib</h1>
-  <button id='editButton' onclick='addImgSrc()'> Add</button>
+  <button id='editButton' onclick='addImgSrc()'> Add</button><input type='file' id='theFileUploader' onchange='fileUploaded()'>
   <div id='theImageList'></div>
 </div>
 <div id='theDetails'></div>
@@ -374,6 +419,12 @@ var currSelection;
   <input onchange='applyFilter()' id='sepia' value="0" type="range" min="0" max="100">
   <button onclick='resetFilters()'> Reset </button>
 </div>
+    
+    <div id='editWrapper'>
+    <iframe crossorigin='anonymous'  id='DRFrame'> </iframe>
+    <button style='right:0px' onclick='saveImageEdit()'> Save </button>
+    <button onclick='cancelImageEdit()'> Cancel </button>
+  </div>
 
 </body>
 </html>

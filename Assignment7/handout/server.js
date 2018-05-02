@@ -9,7 +9,7 @@ var port = 1234;
 var Client = require('node-rest-client').Client;
 
 var MS = require("mongoskin");
-var db = MS.db("mongodb://52.53.189.231:27017/ame470");
+var db = MS.db("mongodb://54.183.208.24:27017/ame470");
 
 //a5
 app.use(methodOverride());
