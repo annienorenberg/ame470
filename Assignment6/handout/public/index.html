@@ -153,7 +153,9 @@ body{
   {
       $("#theDetails").removeClass("hiddeninSmall");
       $("#theInspector").removeClass("hiddeninSmall");
-
+	  setTimeout(function(){$("#theList button").removeClass("active")}, 1000);
+	  163.	  
+  }
 
   function renameClicked(n){
     var currName = currRSSFeedList[n].name;
